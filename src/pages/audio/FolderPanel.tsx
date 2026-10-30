@@ -15,6 +15,7 @@ import {
 } from 'antd';
 import type { DataNode } from 'antd/es/tree';
 import React, { useMemo, useState } from 'react';
+import { useT } from '@/utils/i18n';
 import MoveModal from './MoveModal';
 import {
   createFolder,
@@ -61,6 +62,7 @@ const FolderPanel: React.FC<FolderPanelProps> = ({
   onDeleted,
 }) => {
   const { message } = App.useApp();
+  const t = useT();
   const [keyword, setKeyword] = useState('');
   const [nameModal, setNameModal] = useState<NameModalState>({ open: false });
   const [moveOpen, setMoveOpen] = useState(false);
@@ -84,7 +86,7 @@ const FolderPanel: React.FC<FolderPanelProps> = ({
     const { name } = await form.validateFields();
     const trimmed = name.trim();
     if (!trimmed) {
-      message.warning('请填写目录名称');
+      message.warning(t('pages.audio.folderNameRequired'));
       return;
     }
     if (!nameModal.open) {
@@ -145,7 +147,7 @@ const FolderPanel: React.FC<FolderPanelProps> = ({
             openNameModal({ open: true, mode: 'create', atRoot: true })
           }
         >
-          新增
+          {t('pages.audio.add')}
         </Button>
         <Button
           type="primary"
@@ -155,7 +157,7 @@ const FolderPanel: React.FC<FolderPanelProps> = ({
             openNameModal({ open: true, mode: 'create', atRoot: false })
           }
         >
-          添加下级
+          {t('pages.audio.addChild')}
         </Button>
         <Button
           disabled={noSelection}
@@ -164,18 +166,18 @@ const FolderPanel: React.FC<FolderPanelProps> = ({
             openNameModal({ open: true, mode: 'rename', folder: currentFolder })
           }
         >
-          编辑
+          {t('pages.audio.edit')}
         </Button>
         <Button disabled={noSelection} onClick={() => setMoveOpen(true)}>
-          移动
+          {t('pages.audio.move')}
         </Button>
         <Popconfirm
-          title="目录里还有子目录或音频时会拒绝删除"
+          title={t('pages.audio.deleteFolderHint')}
           disabled={noSelection}
           onConfirm={remove}
         >
           <Button danger disabled={noSelection}>
-            删除
+            {t('pages.audio.delete')}
           </Button>
         </Popconfirm>
       </Space>
@@ -185,14 +187,16 @@ const FolderPanel: React.FC<FolderPanelProps> = ({
         showIcon
         style={{ marginBottom: 8 }}
         title={
-          currentFolder ? `当前目录：${currentFolder.name}` : '未选中任何目录'
+          currentFolder
+            ? t('pages.audio.currentFolder', { name: currentFolder.name })
+            : t('pages.audio.noFolder')
         }
       />
 
       <Spin spinning={loading}>
         <Input.Search
           allowClear
-          placeholder="按目录名称搜索…"
+          placeholder={t('pages.audio.searchFolder')}
           style={{ marginBottom: 10 }}
           onChange={(event) => setKeyword(event.target.value)}
         />
@@ -213,7 +217,7 @@ const FolderPanel: React.FC<FolderPanelProps> = ({
             }}
           />
         ) : (
-          <Empty description="暂无数据" />
+          <Empty description={t('pages.audio.empty')} />
         )}
       </Spin>
 
@@ -221,8 +225,8 @@ const FolderPanel: React.FC<FolderPanelProps> = ({
         open={nameModal.open}
         title={
           nameModal.open && nameModal.mode === 'rename'
-            ? '修改目录'
-            : '新建目录'
+            ? t('pages.audio.renameFolder')
+            : t('pages.audio.newFolder')
         }
         confirmLoading={saving}
         onOk={saveName}
@@ -231,18 +235,20 @@ const FolderPanel: React.FC<FolderPanelProps> = ({
       >
         <Form form={form} layout="vertical" style={{ paddingTop: 16 }}>
           <Form.Item
-            label="目录名称"
+            label={t('pages.audio.folderName')}
             name="name"
-            rules={[{ required: true, message: '请填写目录名称' }]}
+            rules={[
+              { required: true, message: t('pages.audio.folderNameRequired') },
+            ]}
           >
-            <Input placeholder="目录名称" />
+            <Input placeholder={t('pages.audio.folderName')} />
           </Form.Item>
         </Form>
       </Modal>
 
       <MoveModal
         open={moveOpen}
-        title="移动目录"
+        title={t('pages.audio.moveFolder')}
         options={options}
         initialValue={currentFolder?.parentId}
         onOk={saveMove}

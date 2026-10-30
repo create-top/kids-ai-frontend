@@ -1,12 +1,14 @@
 import { UserOutlined } from '@ant-design/icons';
 import type { Settings as LayoutSettings } from '@ant-design/pro-components';
+import { SettingDrawer } from '@ant-design/pro-components';
 import type { RunTimeLayoutConfig } from '@umijs/max';
-import { history, Link } from '@umijs/max';
+import { getIntl, history, Link } from '@umijs/max';
 import React from 'react';
 import {
   AvatarDropdown,
   ErrorBoundary,
   Footer,
+  LangDropdown,
   OfflineBanner,
 } from '@/components';
 import { type CurrentUser, getCurrentUser } from '@/services/auth';
@@ -15,6 +17,42 @@ import { getToken } from '@/utils/token';
 import defaultSettings from '../config/defaultSettings';
 
 const LOGIN_PATH = '/user/login';
+const SETTINGS_STORAGE_KEY = 'kidsai.layout.settings';
+
+/** 主题面板改过的项记在本地，刷新后还在。标题和 logo 始终用代码里的默认值。 */
+function readSettings(): Partial<LayoutSettings> {
+  const fallback = defaultSettings as Partial<LayoutSettings>;
+  if (typeof localStorage === 'undefined') {
+    return fallback;
+  }
+  try {
+    const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
+    if (!raw) {
+      return fallback;
+    }
+    return { ...fallback, ...JSON.parse(raw) };
+  } catch {
+    return fallback;
+  }
+}
+
+function writeSettings(settings: Partial<LayoutSettings>) {
+  const plain: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(settings)) {
+    if (['title', 'logo', 'token', 'iconfontUrl'].includes(key)) {
+      continue;
+    }
+    if (
+      value === undefined ||
+      typeof value === 'function' ||
+      typeof value === 'object'
+    ) {
+      continue;
+    }
+    plain[key] = value;
+  }
+  localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(plain));
+}
 
 function redirectToLogin(): void {
   const { pathname, search, hash } = history.location;
@@ -36,6 +74,7 @@ export async function getInitialState(): Promise<{
   settings?: Partial<LayoutSettings>;
   currentUser?: CurrentUser;
   fetchUserInfo?: () => Promise<CurrentUser | undefined>;
+  settingDrawerOpen?: boolean;
 }> {
   const fetchUserInfo = async () => {
     if (!getToken()) {
@@ -49,10 +88,12 @@ export async function getInitialState(): Promise<{
     }
   };
 
+  const settings = readSettings();
   if (history.location.pathname === LOGIN_PATH) {
     return {
       fetchUserInfo,
-      settings: defaultSettings as Partial<LayoutSettings>,
+      settings,
+      settingDrawerOpen: false,
     };
   }
   const currentUser = await fetchUserInfo();
@@ -62,12 +103,16 @@ export async function getInitialState(): Promise<{
   return {
     fetchUserInfo,
     currentUser,
-    settings: defaultSettings as Partial<LayoutSettings>,
+    settings,
+    settingDrawerOpen: false,
   };
 }
 
 // ProLayout 支持的 api https://procomponents.ant.design/components/layout
-export const layout: RunTimeLayoutConfig = ({ initialState }) => {
+export const layout: RunTimeLayoutConfig = ({
+  initialState,
+  setInitialState,
+}) => {
   const currentUser = initialState?.currentUser;
   return {
     menuItemRender: (item, dom) => {
@@ -80,6 +125,7 @@ export const layout: RunTimeLayoutConfig = ({ initialState }) => {
       }
       return dom;
     },
+    actionsRender: () => [<LangDropdown key="lang" />],
     avatarProps: {
       icon: <UserOutlined />,
       title: currentUser?.realname || currentUser?.username,
@@ -94,7 +140,32 @@ export const layout: RunTimeLayoutConfig = ({ initialState }) => {
       }
     },
     ErrorBoundary,
+    childrenRender: (children) => (
+      <>
+        {children}
+        <SettingDrawer
+          disableUrlParams
+          enableDarkTheme
+          collapse={initialState?.settingDrawerOpen}
+          onCollapseChange={(open) => {
+            setInitialState((state) => ({
+              ...state,
+              settingDrawerOpen: open,
+            }));
+          }}
+          settings={initialState?.settings}
+          onSettingChange={(settings) => {
+            writeSettings(settings);
+            setInitialState((state) => ({
+              ...state,
+              settings,
+            }));
+          }}
+        />
+      </>
+    ),
     ...initialState?.settings,
+    title: getIntl().formatMessage({ id: 'app.title' }),
   };
 };
 

@@ -11,16 +11,17 @@ import {
   login,
   newCaptchaKey,
 } from '@/services/auth';
+import { useT } from '@/utils/i18n';
 import { getSafeRedirectUrl } from '@/utils/redirect';
 import Settings from '../../../../config/defaultSettings';
 
-const useStyles = createStyles(() => ({
+const useStyles = createStyles(({ token }) => ({
   container: {
     display: 'flex',
     flexDirection: 'column',
     height: '100vh',
     overflow: 'auto',
-    background: '#f5f7fa',
+    background: token.colorBgLayout,
   },
   captchaRow: {
     display: 'flex',
@@ -30,13 +31,14 @@ const useStyles = createStyles(() => ({
     height: 40,
     cursor: 'pointer',
     borderRadius: 6,
-    border: '1px solid #d9d9d9',
+    border: `1px solid ${token.colorBorder}`,
   },
 }));
 
 const Login: React.FC = () => {
   const { styles } = useStyles();
   const { message } = App.useApp();
+  const t = useT();
   const [errorMessage, setErrorMessage] = useState<string>();
   const [captchaKey, setCaptchaKey] = useState<string>(newCaptchaKey);
   const [captchaImage, setCaptchaImage] = useState<string>();
@@ -61,7 +63,7 @@ const Login: React.FC = () => {
   const handleSubmit = async (values: Omit<LoginParams, 'checkKey'>) => {
     try {
       await login({ ...values, checkKey: captchaKey });
-      message.success('登录成功');
+      message.success(t('pages.login.success'));
       const redirect = new URL(window.location.href).searchParams.get(
         'redirect',
       );
@@ -77,8 +79,8 @@ const Login: React.FC = () => {
     <div className={styles.container}>
       <Helmet>
         <title>
-          登录
-          {Settings.title && ` - ${Settings.title}`}
+          {t('menu.login')}
+          {Settings.title && ` - ${t('app.title')}`}
         </title>
       </Helmet>
       <div style={{ flex: 1, padding: '32px 0' }}>
@@ -86,7 +88,10 @@ const Login: React.FC = () => {
           contentStyle={{ minWidth: 280, maxWidth: '75vw' }}
           logo={<img alt="logo" src="/logo.svg" />}
           title="Kids-AI"
-          subTitle="家庭儿童 AI 管理端"
+          subTitle={t('pages.login.subtitle')}
+          submitter={{
+            searchConfig: { submitText: t('pages.login.submit') },
+          }}
           onFinish={async (values) => {
             await handleSubmit(values as Omit<LoginParams, 'checkKey'>);
           }}
@@ -102,33 +107,39 @@ const Login: React.FC = () => {
           <ProFormText
             name="username"
             fieldProps={{ size: 'large', prefix: <UserOutlined /> }}
-            placeholder="用户名"
-            rules={[{ required: true, message: '请输入用户名' }]}
+            placeholder={t('pages.login.username')}
+            rules={[
+              { required: true, message: t('pages.login.usernameRequired') },
+            ]}
           />
           <ProFormText.Password
             name="password"
             fieldProps={{ size: 'large', prefix: <LockOutlined /> }}
-            placeholder="密码"
-            rules={[{ required: true, message: '请输入密码' }]}
+            placeholder={t('pages.login.password')}
+            rules={[
+              { required: true, message: t('pages.login.passwordRequired') },
+            ]}
           />
           <div className={styles.captchaRow}>
             <ProFormText
               name="captcha"
               fieldProps={{ size: 'large', prefix: <SafetyOutlined /> }}
-              placeholder="验证码"
-              rules={[{ required: true, message: '请输入验证码' }]}
+              placeholder={t('pages.login.captcha')}
+              rules={[
+                { required: true, message: t('pages.login.captchaRequired') },
+              ]}
               formItemProps={{ style: { flex: 1, marginBottom: 24 } }}
             />
             {captchaImage ? (
               <img
                 className={styles.captchaImage}
                 src={captchaImage}
-                alt="验证码，点击刷新"
-                title="点击刷新"
+                alt={t('pages.login.captchaAlt')}
+                title={t('pages.login.captchaRefresh')}
                 onClick={refreshCaptcha}
               />
             ) : (
-              <a onClick={refreshCaptcha}>获取验证码</a>
+              <a onClick={refreshCaptcha}>{t('pages.login.captchaFetch')}</a>
             )}
           </div>
         </LoginForm>

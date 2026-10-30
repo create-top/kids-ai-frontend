@@ -4,8 +4,9 @@
  */
 import Footer from './Footer';
 import { AvatarDropdown } from './RightContent/AvatarDropdown';
+import { LangDropdown } from './RightContent/LangDropdown';
 
 export { default as ErrorBoundary } from './ErrorBoundary';
 export { default as OfflineBanner } from './OfflineBanner';
 
-export { AvatarDropdown, Footer };
+export { AvatarDropdown, Footer, LangDropdown };

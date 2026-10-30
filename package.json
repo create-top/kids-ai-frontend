@@ -25,6 +25,9 @@
   "dependencies": {
     "@ant-design/icons": "^6.3.2",
     "@ant-design/pro-components": "^3.1.14-2",
+    "@ant-design/x": "^2.9.0",
+    "@ant-design/x-markdown": "^2.9.0",
+    "@ant-design/x-sdk": "^2.9.0",
     "antd": "^6.6.0",
     "antd-style": "^4.1.0",
     "clsx": "^2.1.1",

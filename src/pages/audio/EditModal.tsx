@@ -1,5 +1,6 @@
 import { App, Form, Input, Modal } from 'antd';
 import React, { useEffect, useState } from 'react';
+import { useT } from '@/utils/i18n';
 import { type AudioItem, updateAudio } from './service';
 import { parseSortNo, parseTags } from './utils';
 
@@ -25,6 +26,7 @@ const EditModal: React.FC<EditModalProps> = ({
   onSaved,
 }) => {
   const { message } = App.useApp();
+  const t = useT();
   const [form] = Form.useForm<EditFormValues>();
   const [saving, setSaving] = useState(false);
 
@@ -47,7 +49,7 @@ const EditModal: React.FC<EditModalProps> = ({
     const values = form.getFieldsValue();
     const sortNo = parseSortNo(values.sortNo);
     if (sortNo === undefined) {
-      message.warning('顺序要填数字');
+      message.warning(t('pages.audio.sortNumber'));
       return;
     }
     setSaving(true);
@@ -71,27 +73,27 @@ const EditModal: React.FC<EditModalProps> = ({
   return (
     <Modal
       open={open}
-      title="编辑音频"
+      title={t('pages.audio.editAudio')}
       confirmLoading={saving}
       onOk={save}
       onCancel={onClose}
       forceRender
     >
       <Form form={form} layout="vertical" style={{ paddingTop: 16 }}>
-        <Form.Item label="标题" name="title">
+        <Form.Item label={t('pages.audio.title')} name="title">
           <Input />
         </Form.Item>
-        <Form.Item label="描述" name="description">
+        <Form.Item label={t('pages.audio.description')} name="description">
           <Input.TextArea rows={3} />
         </Form.Item>
-        <Form.Item label="分类" name="category">
+        <Form.Item label={t('pages.audio.category')} name="category">
           <Input />
         </Form.Item>
-        <Form.Item label="标签" name="tags">
-          <Input placeholder="用逗号分隔" />
+        <Form.Item label={t('pages.audio.tags')} name="tags">
+          <Input placeholder={t('pages.audio.tagsComma')} />
         </Form.Item>
-        <Form.Item label="顺序" name="sortNo">
-          <Input placeholder="同一目录里的先后，空着就按集数" />
+        <Form.Item label={t('pages.audio.sort')} name="sortNo">
+          <Input placeholder={t('pages.audio.sortPlaceholder')} />
         </Form.Item>
       </Form>
     </Modal>

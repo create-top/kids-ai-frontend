@@ -11,6 +11,7 @@ import {
   Upload,
 } from 'antd';
 import React, { useEffect, useState } from 'react';
+import { useT } from '@/utils/i18n';
 import { uploadAudio } from './service';
 import type { FolderOption } from './utils';
 
@@ -39,6 +40,7 @@ const UploadModal: React.FC<UploadModalProps> = ({
   onUploaded,
 }) => {
   const { message } = App.useApp();
+  const t = useT();
   const [form] = Form.useForm<UploadFormValues>();
   const [file, setFile] = useState<File | null>(null);
   const [fileList, setFileList] = useState<UploadFile[]>([]);
@@ -57,7 +59,7 @@ const UploadModal: React.FC<UploadModalProps> = ({
     const values = form.getFieldsValue();
     const title = values.title?.trim();
     if (!file || !title) {
-      message.warning('请选择音频并填写标题');
+      message.warning(t('pages.audio.selectFileAndTitle'));
       return;
     }
     const body = new FormData();
@@ -79,7 +81,7 @@ const UploadModal: React.FC<UploadModalProps> = ({
     try {
       await uploadAudio(body);
       onClose();
-      message.success('上传成功');
+      message.success(t('pages.audio.uploadOk'));
       await onUploaded();
     } catch (error) {
       message.error((error as Error).message);
@@ -91,14 +93,14 @@ const UploadModal: React.FC<UploadModalProps> = ({
   return (
     <Modal
       open={open}
-      title="上传音频"
+      title={t('pages.audio.uploadAudio')}
       confirmLoading={saving}
       onOk={submit}
       onCancel={onClose}
       forceRender
     >
       <Form form={form} layout="vertical" style={{ paddingTop: 16 }}>
-        <Form.Item label="音频文件" required>
+        <Form.Item label={t('pages.audio.audioFile')} required>
           <Upload
             fileList={fileList}
             accept=".mp3,.wav,.m4a,.aac,audio/*"
@@ -120,17 +122,19 @@ const UploadModal: React.FC<UploadModalProps> = ({
               setFileList([]);
             }}
           >
-            <Button icon={<UploadOutlined />}>选择文件</Button>
+            <Button icon={<UploadOutlined />}>
+              {t('pages.audio.chooseFile')}
+            </Button>
           </Upload>
         </Form.Item>
-        <Form.Item label="标题" name="title" required>
+        <Form.Item label={t('pages.audio.title')} name="title" required>
           <Input />
         </Form.Item>
-        <Form.Item label="目录" name="folderId">
+        <Form.Item label={t('pages.audio.folder')} name="folderId">
           <Select
             allowClear
             showSearch={{ optionFilterProp: 'label' }}
-            placeholder="未归类"
+            placeholder={t('pages.audio.uncategorized')}
             options={options}
           />
         </Form.Item>
@@ -138,18 +142,21 @@ const UploadModal: React.FC<UploadModalProps> = ({
           items={[
             {
               key: 'more',
-              label: '更多',
+              label: t('pages.audio.more'),
               forceRender: true,
               children: (
                 <>
-                  <Form.Item label="描述" name="description">
+                  <Form.Item
+                    label={t('pages.audio.description')}
+                    name="description"
+                  >
                     <Input.TextArea />
                   </Form.Item>
-                  <Form.Item label="分类" name="category">
+                  <Form.Item label={t('pages.audio.category')} name="category">
                     <Input />
                   </Form.Item>
-                  <Form.Item label="标签" name="tags">
-                    <Input placeholder="用逗号分隔" />
+                  <Form.Item label={t('pages.audio.tags')} name="tags">
+                    <Input placeholder={t('pages.audio.tagsComma')} />
                   </Form.Item>
                 </>
               ),

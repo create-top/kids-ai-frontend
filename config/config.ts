@@ -31,15 +31,14 @@ export default defineConfig({
   access: {},
   title: defaultSettings.title,
   layout: {
-    // 菜单名直接写中文，不走多语言
-    locale: false,
+    // 菜单名走 src/locales 里的 menu.*，只提供中文和英文
+    locale: true,
     ...defaultSettings,
   },
-  // WHY：只保留 antd 自带的中文文案（分页、弹窗按钮等），不做多语言切换。
   locale: {
     default: 'zh-CN',
     antd: true,
-    baseNavigator: false,
+    baseNavigator: true,
   },
   antd: {
     appConfig: {},

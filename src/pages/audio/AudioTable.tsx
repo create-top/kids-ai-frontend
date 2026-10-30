@@ -1,6 +1,16 @@
-import { App, Button, Dropdown, Popconfirm, Space, Table, Tag } from 'antd';
+import {
+  App,
+  Button,
+  Dropdown,
+  Popconfirm,
+  Space,
+  Table,
+  Tag,
+  theme,
+} from 'antd';
 import type { ColumnsType, TablePaginationConfig } from 'antd/es/table';
 import React from 'react';
+import { useT } from '@/utils/i18n';
 import type { AudioItem } from './service';
 
 interface AudioTableProps {
@@ -17,11 +27,6 @@ interface AudioTableProps {
   onDelete: (item: AudioItem) => Promise<void>;
 }
 
-const subTextStyle: React.CSSProperties = {
-  color: 'rgba(0, 0, 0, 0.45)',
-  fontSize: 12,
-};
-
 const AudioTable: React.FC<AudioTableProps> = ({
   audios,
   loading,
@@ -36,39 +41,45 @@ const AudioTable: React.FC<AudioTableProps> = ({
   onDelete,
 }) => {
   const { modal } = App.useApp();
+  const { token } = theme.useToken();
+  const t = useT();
+  const subTextStyle: React.CSSProperties = {
+    color: token.colorTextDescription,
+    fontSize: 12,
+  };
   const desktopColumns: ColumnsType<AudioItem> = [
-    { title: '标题', dataIndex: 'title', ellipsis: true },
-    { title: '文件名', dataIndex: 'fileName', ellipsis: true },
-    { title: '分类', dataIndex: 'category', width: 120 },
+    { title: t('pages.audio.title'), dataIndex: 'title', ellipsis: true },
+    { title: t('pages.audio.fileName'), dataIndex: 'fileName', ellipsis: true },
+    { title: t('pages.audio.category'), dataIndex: 'category', width: 120 },
     {
-      title: '标签',
+      title: t('pages.audio.tags'),
       dataIndex: 'tags',
       width: 180,
       render: (tags?: string[]) =>
         (tags || []).map((tag) => <Tag key={tag}>{tag}</Tag>),
     },
     {
-      title: '操作',
+      title: t('pages.audio.actions'),
       key: 'action',
       width: 240,
       align: 'center',
       render: (_, record) => (
         <Space size={0} style={{ whiteSpace: 'nowrap' }}>
           <Button type="link" size="small" onClick={() => onPlay(record)}>
-            播放
+            {t('pages.audio.play')}
           </Button>
           <Button type="link" size="small" onClick={() => onEdit(record)}>
-            编辑
+            {t('pages.audio.edit')}
           </Button>
           <Button type="link" size="small" onClick={() => onMove(record)}>
-            移动
+            {t('pages.audio.move')}
           </Button>
           <Popconfirm
-            title={`删除「${record.title}」？`}
+            title={t('pages.audio.deleteConfirm', { title: record.title })}
             onConfirm={() => onDelete(record)}
           >
             <Button type="link" size="small" danger>
-              删除
+              {t('pages.audio.delete')}
             </Button>
           </Popconfirm>
         </Space>
@@ -79,7 +90,7 @@ const AudioTable: React.FC<AudioTableProps> = ({
   // 窄屏：标题下面补一行文件名和顺序，操作收进下拉菜单
   const mobileColumns: ColumnsType<AudioItem> = [
     {
-      title: '标题',
+      title: t('pages.audio.title'),
       dataIndex: 'title',
       ellipsis: true,
       render: (_, record) => (
@@ -87,13 +98,14 @@ const AudioTable: React.FC<AudioTableProps> = ({
           <div>{record.title}</div>
           <div style={subTextStyle}>
             {record.fileName}
-            {record.sortNo != null && ` · 顺序 ${record.sortNo}`}
+            {record.sortNo != null &&
+              t('pages.audio.sortInline', { sortNo: record.sortNo })}
           </div>
         </>
       ),
     },
     {
-      title: '操作',
+      title: t('pages.audio.actions'),
       key: 'action',
       width: 72,
       align: 'center',
@@ -102,10 +114,10 @@ const AudioTable: React.FC<AudioTableProps> = ({
           trigger={['click']}
           menu={{
             items: [
-              { key: 'play', label: '播放' },
-              { key: 'edit', label: '编辑' },
-              { key: 'move', label: '移动' },
-              { key: 'delete', label: '删除', danger: true },
+              { key: 'play', label: t('pages.audio.play') },
+              { key: 'edit', label: t('pages.audio.edit') },
+              { key: 'move', label: t('pages.audio.move') },
+              { key: 'delete', label: t('pages.audio.delete'), danger: true },
             ],
             onClick: ({ key }) => {
               if (key === 'play') onPlay(record);
@@ -113,7 +125,9 @@ const AudioTable: React.FC<AudioTableProps> = ({
               else if (key === 'move') onMove(record);
               else {
                 modal.confirm({
-                  title: `删除「${record.title}」？`,
+                  title: t('pages.audio.deleteConfirm', {
+                    title: record.title,
+                  }),
                   onOk: () => onDelete(record),
                 });
               }
@@ -121,7 +135,7 @@ const AudioTable: React.FC<AudioTableProps> = ({
           }}
         >
           <Button type="link" size="small">
-            操作
+            {t('pages.audio.actions')}
           </Button>
         </Dropdown>
       ),
@@ -134,7 +148,7 @@ const AudioTable: React.FC<AudioTableProps> = ({
     total,
     simple: !isDesktop,
     showSizeChanger: isDesktop,
-    showTotal: (count) => `共 ${count} 条数据`,
+    showTotal: (count) => t('pages.audio.total', { count }),
     onChange: onPageChange,
   };
 

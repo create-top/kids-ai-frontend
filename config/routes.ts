@@ -10,7 +10,7 @@ export default [
     routes: [
       {
         path: '/user/login',
-        name: '登录',
+        name: 'login',
         component: './user/login',
       },
       {
@@ -21,9 +21,15 @@ export default [
   },
   {
     path: '/audio',
-    name: '家庭音频',
+    name: 'audio',
     icon: 'customerService',
     component: './audio',
+  },
+  {
+    path: '/chatbot',
+    name: 'chatbot',
+    icon: 'robot',
+    component: './chatbot',
   },
   {
     path: '/',

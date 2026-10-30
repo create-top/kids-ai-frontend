@@ -13,6 +13,7 @@ import {
   Tabs,
 } from 'antd';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useT } from '@/utils/i18n';
 import AudioTable from './AudioTable';
 import EditModal from './EditModal';
 import FolderPanel from './FolderPanel';
@@ -36,6 +37,7 @@ type MobileTab = 'folders' | 'audios';
 
 const AudioPage: React.FC = () => {
   const { message } = App.useApp();
+  const t = useT();
   const screens = Grid.useBreakpoint();
   // useBreakpoint 挂载后才有值；先用窗口宽度，避免电脑上先闪出手机布局
   const isDesktop =
@@ -186,10 +188,10 @@ const AudioPage: React.FC = () => {
   };
 
   const currentTitle = uncategorized
-    ? '未归类'
+    ? t('pages.audio.uncategorized')
     : currentFolder
       ? currentFolder.name
-      : '全部音频';
+      : t('pages.audio.allAudios');
 
   const folderColumn = (
     <Col xl={8} lg={24} md={24} style={{ marginBottom: 10 }}>
@@ -214,10 +216,12 @@ const AudioPage: React.FC = () => {
             icon={<UploadOutlined />}
             onClick={() => setUploadOpen(true)}
           >
-            上传
+            {t('pages.audio.upload')}
           </Button>
-          <Button onClick={showAll}>全部</Button>
-          <Button onClick={showUncategorized}>未归类</Button>
+          <Button onClick={showAll}>{t('pages.audio.all')}</Button>
+          <Button onClick={showUncategorized}>
+            {t('pages.audio.uncategorized')}
+          </Button>
         </Space>
         <Alert
           type="info"
@@ -227,7 +231,7 @@ const AudioPage: React.FC = () => {
         />
         <Input.Search
           allowClear
-          placeholder="按标题搜索…"
+          placeholder={t('pages.audio.searchTitle')}
           value={keywordInput}
           onChange={(event) => setKeywordInput(event.target.value)}
           onSearch={search}
@@ -269,8 +273,8 @@ const AudioPage: React.FC = () => {
           activeKey={mobileTab}
           onChange={(key) => setMobileTab(key as MobileTab)}
           items={[
-            { key: 'folders', label: '目录' },
-            { key: 'audios', label: '音频' },
+            { key: 'folders', label: t('pages.audio.folders') },
+            { key: 'audios', label: t('pages.audio.audios') },
           ]}
         />
       )}
@@ -303,7 +307,7 @@ const AudioPage: React.FC = () => {
       />
       <MoveModal
         open={moveOpen}
-        title="移动音频"
+        title={t('pages.audio.moveAudio')}
         options={folderOptions}
         initialValue={currentAudio?.folderId}
         onOk={saveAudioMove}

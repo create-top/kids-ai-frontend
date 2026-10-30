@@ -1,3 +1,4 @@
+import { getIntl } from '@umijs/max';
 import { Alert } from 'antd';
 import { useSyncExternalStore } from 'react';
 
@@ -35,7 +36,7 @@ const OfflineBanner: React.FC = () => {
         zIndex: 10,
         maxWidth: 480,
       }}
-      title="当前处于离线状态，部分功能可能无法使用。"
+      title={getIntl().formatMessage({ id: 'pages.offline' })}
     />
   );
 };

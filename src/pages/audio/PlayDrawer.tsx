@@ -1,5 +1,6 @@
 import { Descriptions, Drawer } from 'antd';
 import React from 'react';
+import { useT } from '@/utils/i18n';
 import { type AudioItem, audioContentUrl } from './service';
 
 interface PlayDrawerProps {
@@ -15,10 +16,11 @@ const PlayDrawer: React.FC<PlayDrawerProps> = ({
   isDesktop,
   onClose,
 }) => {
+  const t = useT();
   return (
     <Drawer
       open={open}
-      title={audio?.title || '播放'}
+      title={audio?.title || t('pages.audio.play')}
       placement="right"
       size={isDesktop ? 420 : '100%'}
       onClose={onClose}
@@ -32,16 +34,20 @@ const PlayDrawer: React.FC<PlayDrawerProps> = ({
             size="small"
             bordered
             items={[
-              { key: 'file', label: '文件', children: audio.fileName },
+              {
+                key: 'file',
+                label: t('pages.audio.file'),
+                children: audio.fileName,
+              },
               {
                 key: 'category',
-                label: '分类',
+                label: t('pages.audio.category'),
                 children: audio.category || '-',
               },
               {
                 key: 'description',
-                label: '描述',
-                children: audio.description || '没有描述',
+                label: t('pages.audio.description'),
+                children: audio.description || t('pages.audio.noDescription'),
               },
             ]}
           />

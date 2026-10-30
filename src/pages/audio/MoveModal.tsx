@@ -1,5 +1,6 @@
 import { Modal, Select } from 'antd';
 import React, { useEffect, useState } from 'react';
+import { useT } from '@/utils/i18n';
 import type { FolderOption } from './utils';
 
 interface MoveModalProps {
@@ -21,6 +22,7 @@ const MoveModal: React.FC<MoveModalProps> = ({
   onOk,
   onCancel,
 }) => {
+  const t = useT();
   const [value, setValue] = useState<number | undefined>();
   const [saving, setSaving] = useState(false);
 
@@ -53,7 +55,7 @@ const MoveModal: React.FC<MoveModalProps> = ({
           showSearch={{ optionFilterProp: 'label' }}
           value={value}
           onChange={(next) => setValue(next ?? undefined)}
-          placeholder="根目录 / 未归类"
+          placeholder={t('pages.audio.rootOrUncategorized')}
           style={{ width: '100%' }}
           options={options}
         />

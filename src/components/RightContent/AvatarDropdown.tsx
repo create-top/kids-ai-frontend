@@ -1,23 +1,16 @@
-import { LogoutOutlined } from '@ant-design/icons';
+import { LogoutOutlined, SkinOutlined } from '@ant-design/icons';
 import { history, useModel } from '@umijs/max';
 import type { MenuProps } from 'antd';
 import { Spin } from 'antd';
 import React, { startTransition } from 'react';
 import { logout } from '@/services/auth';
+import { useT } from '@/utils/i18n';
 import { clearToken } from '@/utils/token';
 import HeaderDropdown from '../HeaderDropdown';
 
 type GlobalHeaderRightProps = {
   children?: React.ReactNode;
 };
-
-const menuItems: MenuProps['items'] = [
-  {
-    key: 'logout',
-    icon: <LogoutOutlined />,
-    label: '退出登录',
-  },
-];
 
 const loginOut = async () => {
   try {
@@ -37,8 +30,26 @@ export const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({
   children,
 }) => {
   const { initialState, setInitialState } = useModel('@@initialState');
+  const t = useT();
+  const menuItems: MenuProps['items'] = [
+    {
+      key: 'theme',
+      icon: <SkinOutlined />,
+      label: t('menu.account.theme'),
+    },
+    { type: 'divider' },
+    {
+      key: 'logout',
+      icon: <LogoutOutlined />,
+      label: t('menu.account.logout'),
+    },
+  ];
 
   const onMenuClick: MenuProps['onClick'] = (event) => {
+    if (event.key === 'theme') {
+      setInitialState((s) => ({ ...s, settingDrawerOpen: true }));
+      return;
+    }
     if (event.key === 'logout') {
       startTransition(() => {
         setInitialState((s) => ({ ...s, currentUser: undefined }));

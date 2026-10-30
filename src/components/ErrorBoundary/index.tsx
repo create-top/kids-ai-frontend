@@ -1,3 +1,4 @@
+import { getIntl } from '@umijs/max';
 import { Button, Card, Result } from 'antd';
 import React from 'react';
 
@@ -19,12 +20,15 @@ function renderErrorFallback(
   const isChunkError = isChunkLoadError(error);
 
   // WHY：页面脚本加载失败多半是网络或刚发布过新版本，提示要和普通渲染错误区分开。
-  const title = isChunkError ? '页面加载失败' : '页面出错了';
+  const t = (id: string) => getIntl().formatMessage({ id });
+  const title = isChunkError
+    ? t('pages.error.loadFailed')
+    : t('pages.error.crashed');
   const subTitle = !isChunkError
-    ? '抱歉，这个页面出错了。请刷新重试，或回到首页。'
+    ? t('pages.error.crashedHint')
     : isOffline
-      ? '网络已断开，请检查网络后刷新页面。'
-      : '页面资源加载失败，请刷新后重试。';
+      ? t('pages.error.offlineHint')
+      : t('pages.error.chunkHint');
 
   return (
     <Card variant="borderless" style={{ margin: 24 }}>
@@ -35,7 +39,7 @@ function renderErrorFallback(
         extra={[
           isChunkError && (
             <Button type="primary" key="retry" onClick={onRetry}>
-              重试
+              {t('pages.error.retry')}
             </Button>
           ),
           <Button
@@ -43,10 +47,10 @@ function renderErrorFallback(
             key="reload"
             onClick={onReload}
           >
-            刷新页面
+            {t('pages.error.reload')}
           </Button>,
           <Button href="/" key="home">
-            回到首页
+            {t('pages.404.home')}
           </Button>,
         ].filter(Boolean)}
       />
