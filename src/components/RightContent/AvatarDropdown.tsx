@@ -1,13 +1,10 @@
-import {
-  LogoutOutlined,
-  SettingOutlined,
-  SkinOutlined,
-} from '@ant-design/icons';
+import { LogoutOutlined } from '@ant-design/icons';
 import { history, useModel } from '@umijs/max';
 import type { MenuProps } from 'antd';
 import { Spin } from 'antd';
 import React, { startTransition } from 'react';
-import { outLogin } from '@/services/ant-design-pro/api';
+import { logout } from '@/services/auth';
+import { clearToken } from '@/utils/token';
 import HeaderDropdown from '../HeaderDropdown';
 
 type GlobalHeaderRightProps = {
@@ -15,19 +12,6 @@ type GlobalHeaderRightProps = {
 };
 
 const menuItems: MenuProps['items'] = [
-  {
-    key: 'settings',
-    icon: <SettingOutlined />,
-    label: '个人设置',
-  },
-  {
-    key: 'theme',
-    icon: <SkinOutlined />,
-    label: '主题设置',
-  },
-  {
-    type: 'divider' as const,
-  },
   {
     key: 'logout',
     icon: <LogoutOutlined />,
@@ -37,22 +21,16 @@ const menuItems: MenuProps['items'] = [
 
 const loginOut = async () => {
   try {
-    await outLogin();
+    await logout();
   } catch {
-    // Local logout has already cleared user state; redirect should still proceed.
+    // 服务端退出失败也要在本地退出，否则用户点了没反应
   }
+  clearToken();
   const { search, pathname } = window.location;
-  const urlParams = new URL(window.location.href).searchParams;
-  const searchParams = new URLSearchParams({
-    redirect: pathname + search,
+  history.replace({
+    pathname: '/user/login',
+    search: new URLSearchParams({ redirect: pathname + search }).toString(),
   });
-  const redirect = urlParams.get('redirect');
-  if (window.location.pathname !== '/user/login' && !redirect) {
-    history.replace({
-      pathname: '/user/login',
-      search: searchParams.toString(),
-    });
-  }
 };
 
 export const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({
@@ -61,28 +39,15 @@ export const AvatarDropdown: React.FC<GlobalHeaderRightProps> = ({
   const { initialState, setInitialState } = useModel('@@initialState');
 
   const onMenuClick: MenuProps['onClick'] = (event) => {
-    const { key } = event;
-    if (key === 'logout') {
+    if (event.key === 'logout') {
       startTransition(() => {
         setInitialState((s) => ({ ...s, currentUser: undefined }));
       });
       loginOut();
-      return;
     }
-    if (key === 'theme') {
-      setInitialState((s) => ({ ...s, settingDrawerOpen: true }));
-      return;
-    }
-    history.push(`/account/${key}`);
   };
 
-  if (!initialState) {
-    return <Spin size="small" />;
-  }
-
-  const { currentUser } = initialState;
-
-  if (!currentUser) {
+  if (!initialState?.currentUser) {
     return <Spin size="small" />;
   }
 

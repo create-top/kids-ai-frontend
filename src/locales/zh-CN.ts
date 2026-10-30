@@ -1,22 +1,3 @@
-import component from './zh-CN/component';
-import globalHeader from './zh-CN/globalHeader';
-import menu from './zh-CN/menu';
-import network from './zh-CN/network';
-import pages from './zh-CN/pages';
-import settingDrawer from './zh-CN/settingDrawer';
-import settings from './zh-CN/settings';
-
-export default {
-  'navBar.lang': '语言',
-  'layout.user.link.help': '帮助',
-  'layout.user.link.privacy': '隐私',
-  'layout.user.link.terms': '条款',
-  'app.preview.down.block': '下载此页面到本地项目',
-  ...pages,
-  ...globalHeader,
-  ...menu,
-  ...settingDrawer,
-  ...settings,
-  ...network,
-  ...component,
-};
+// 页面文字直接写中文，这里不放文案。
+// 保留这个文件是为了让 umi 的 locale 插件启用 antd 自带的中文文案。
+export default {};

@@ -1,4 +1,3 @@
-import { getIntl } from '@umijs/max';
 import { Button, Card, Result } from 'antd';
 import React from 'react';
 
@@ -10,49 +9,33 @@ function isChunkLoadError(error: Error): boolean {
   );
 }
 
-function getSubTitleId(isChunkError: boolean, isOffline: boolean): string {
-  if (!isChunkError) return 'app.error.render.description';
-  return isOffline
-    ? 'app.error.chunk.description.offline'
-    : 'app.error.chunk.description.online';
-}
-
 function renderErrorFallback(
   error: Error,
   isOnline: boolean,
   onRetry: () => void,
   onReload: () => void,
 ) {
-  const intl = getIntl();
   const isOffline = !isOnline;
   const isChunkError = isChunkLoadError(error);
+
+  // WHY：页面脚本加载失败多半是网络或刚发布过新版本，提示要和普通渲染错误区分开。
+  const title = isChunkError ? '页面加载失败' : '页面出错了';
+  const subTitle = !isChunkError
+    ? '抱歉，这个页面出错了。请刷新重试，或回到首页。'
+    : isOffline
+      ? '网络已断开，请检查网络后刷新页面。'
+      : '页面资源加载失败，请刷新后重试。';
 
   return (
     <Card variant="borderless" style={{ margin: 24 }}>
       <Result
         status="error"
-        title={intl.formatMessage({
-          id: isChunkError ? 'app.error.chunk.title' : 'app.error.render.title',
-          defaultMessage: isChunkError
-            ? 'Failed to load page'
-            : 'Something went wrong',
-        })}
-        subTitle={intl.formatMessage({
-          id: getSubTitleId(isChunkError, isOffline),
-          defaultMessage:
-            isChunkError && isOffline
-              ? 'Your network connection has been lost. Please check your connection and reload.'
-              : isChunkError
-                ? 'Page resources failed to load. Please reload and try again.'
-                : 'Sorry, an error occurred on this page. Please reload or go back to the home page.',
-        })}
+        title={title}
+        subTitle={subTitle}
         extra={[
           isChunkError && (
             <Button type="primary" key="retry" onClick={onRetry}>
-              {intl.formatMessage({
-                id: 'app.error.retry',
-                defaultMessage: 'Retry',
-              })}
+              重试
             </Button>
           ),
           <Button
@@ -60,23 +43,16 @@ function renderErrorFallback(
             key="reload"
             onClick={onReload}
           >
-            {intl.formatMessage({
-              id: 'app.error.reload',
-              defaultMessage: 'Reload Page',
-            })}
+            刷新页面
           </Button>,
           <Button href="/" key="home">
-            {intl.formatMessage({
-              id: 'app.error.home',
-              defaultMessage: 'Back Home',
-            })}
+            回到首页
           </Button>,
         ].filter(Boolean)}
       />
     </Card>
   );
 }
-
 interface ErrorBoundaryState {
   hasError: boolean;
   error: Error | null;

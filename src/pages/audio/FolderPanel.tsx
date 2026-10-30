@@ -1,0 +1,255 @@
+import { PlusOutlined } from '@ant-design/icons';
+import {
+  Alert,
+  App,
+  Button,
+  Card,
+  Empty,
+  Form,
+  Input,
+  Modal,
+  Popconfirm,
+  Space,
+  Spin,
+  Tree,
+} from 'antd';
+import type { DataNode } from 'antd/es/tree';
+import React, { useMemo, useState } from 'react';
+import MoveModal from './MoveModal';
+import {
+  createFolder,
+  deleteFolder,
+  type Folder,
+  moveFolder,
+  renameFolder,
+} from './service';
+import { filterFolderTree, flattenFolders } from './utils';
+
+interface FolderPanelProps {
+  tree: Folder[];
+  loading: boolean;
+  currentFolder: Folder | null;
+  isDesktop: boolean;
+  /** 选中目录；点同一个已选中的节点时 antd 会给空，由调用方忽略 */
+  onSelect: (folderId: number) => void;
+  /** 目录结构变了（新建、改名、移动），需要重新取树 */
+  onTreeChanged: () => Promise<void>;
+  /** 当前目录被删除 */
+  onDeleted: () => Promise<void>;
+}
+
+function toTreeData(nodes: Folder[]): DataNode[] {
+  return nodes.map((node) => ({
+    title: node.name,
+    key: String(node.id),
+    children: toTreeData(node.children || []),
+  }));
+}
+
+type NameModalState =
+  | { open: false }
+  | { open: true; mode: 'create'; atRoot: boolean }
+  | { open: true; mode: 'rename'; folder: Folder };
+
+const FolderPanel: React.FC<FolderPanelProps> = ({
+  tree,
+  loading,
+  currentFolder,
+  isDesktop,
+  onSelect,
+  onTreeChanged,
+  onDeleted,
+}) => {
+  const { message } = App.useApp();
+  const [keyword, setKeyword] = useState('');
+  const [nameModal, setNameModal] = useState<NameModalState>({ open: false });
+  const [moveOpen, setMoveOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [form] = Form.useForm<{ name: string }>();
+
+  const treeData = useMemo(
+    () => toTreeData(filterFolderTree(tree, keyword)),
+    [tree, keyword],
+  );
+  const options = useMemo(() => flattenFolders(tree), [tree]);
+
+  const openNameModal = (state: NameModalState) => {
+    form.setFieldsValue({
+      name: state.open && state.mode === 'rename' ? state.folder.name : '',
+    });
+    setNameModal(state);
+  };
+
+  const saveName = async () => {
+    const { name } = await form.validateFields();
+    const trimmed = name.trim();
+    if (!trimmed) {
+      message.warning('请填写目录名称');
+      return;
+    }
+    if (!nameModal.open) {
+      return;
+    }
+    setSaving(true);
+    try {
+      if (nameModal.mode === 'rename') {
+        await renameFolder(nameModal.folder.id, trimmed);
+      } else {
+        // 「新增」建在根目录；「添加下级」建在当前选中的目录下
+        const parentId = nameModal.atRoot ? null : (currentFolder?.id ?? null);
+        await createFolder(parentId, trimmed);
+      }
+      setNameModal({ open: false });
+      await onTreeChanged();
+    } catch (error) {
+      message.error((error as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveMove = async (parentId: number | null) => {
+    if (!currentFolder) {
+      return;
+    }
+    try {
+      await moveFolder(currentFolder.id, parentId);
+      setMoveOpen(false);
+      await onTreeChanged();
+    } catch (error) {
+      message.error((error as Error).message);
+    }
+  };
+
+  const remove = async () => {
+    if (!currentFolder) {
+      return;
+    }
+    try {
+      await deleteFolder(currentFolder.id);
+      await onDeleted();
+    } catch (error) {
+      message.error((error as Error).message);
+    }
+  };
+
+  const noSelection = !currentFolder;
+
+  return (
+    <Card variant="borderless" style={{ height: '100%' }}>
+      <Space wrap style={{ marginBottom: 12 }}>
+        <Button
+          type="primary"
+          icon={<PlusOutlined />}
+          onClick={() =>
+            openNameModal({ open: true, mode: 'create', atRoot: true })
+          }
+        >
+          新增
+        </Button>
+        <Button
+          type="primary"
+          icon={<PlusOutlined />}
+          disabled={noSelection}
+          onClick={() =>
+            openNameModal({ open: true, mode: 'create', atRoot: false })
+          }
+        >
+          添加下级
+        </Button>
+        <Button
+          disabled={noSelection}
+          onClick={() =>
+            currentFolder &&
+            openNameModal({ open: true, mode: 'rename', folder: currentFolder })
+          }
+        >
+          编辑
+        </Button>
+        <Button disabled={noSelection} onClick={() => setMoveOpen(true)}>
+          移动
+        </Button>
+        <Popconfirm
+          title="目录里还有子目录或音频时会拒绝删除"
+          disabled={noSelection}
+          onConfirm={remove}
+        >
+          <Button danger disabled={noSelection}>
+            删除
+          </Button>
+        </Popconfirm>
+      </Space>
+
+      <Alert
+        type="info"
+        showIcon
+        style={{ marginBottom: 8 }}
+        title={
+          currentFolder ? `当前目录：${currentFolder.name}` : '未选中任何目录'
+        }
+      />
+
+      <Spin spinning={loading}>
+        <Input.Search
+          allowClear
+          placeholder="按目录名称搜索…"
+          style={{ marginBottom: 10 }}
+          onChange={(event) => setKeyword(event.target.value)}
+        />
+        {treeData.length ? (
+          <Tree
+            treeData={treeData}
+            selectedKeys={currentFolder ? [String(currentFolder.id)] : []}
+            defaultExpandAll
+            style={
+              isDesktop
+                ? { overflow: 'auto', height: 'calc(100vh - 330px)' }
+                : { overflow: 'auto', maxHeight: '60vh' }
+            }
+            onSelect={(keys) => {
+              if (keys.length) {
+                onSelect(Number(keys[0]));
+              }
+            }}
+          />
+        ) : (
+          <Empty description="暂无数据" />
+        )}
+      </Spin>
+
+      <Modal
+        open={nameModal.open}
+        title={
+          nameModal.open && nameModal.mode === 'rename'
+            ? '修改目录'
+            : '新建目录'
+        }
+        confirmLoading={saving}
+        onOk={saveName}
+        onCancel={() => setNameModal({ open: false })}
+        forceRender
+      >
+        <Form form={form} layout="vertical" style={{ paddingTop: 16 }}>
+          <Form.Item
+            label="目录名称"
+            name="name"
+            rules={[{ required: true, message: '请填写目录名称' }]}
+          >
+            <Input placeholder="目录名称" />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <MoveModal
+        open={moveOpen}
+        title="移动目录"
+        options={options}
+        initialValue={currentFolder?.parentId}
+        onOk={saveMove}
+        onCancel={() => setMoveOpen(false)}
+      />
+    </Card>
+  );
+};
+
+export default FolderPanel;

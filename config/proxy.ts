@@ -1,41 +1,24 @@
 /**
- * @name 代理的配置
- * @see 在生产环境 代理是无法生效的，所以这里没有生产环境的配置
- * -------------------------------
- * The agent cannot take effect in the production environment
- * so there is no configuration of the production environment
- * For details, please see
- * https://pro.ant.design/docs/deploy
+ * @name 开发环境代理
+ * @description 只在 `max dev` 时生效，build 之后没有代理。
+ * 生产环境需要用 Nginx 做同样的转发，并调大上传大小（视频上传用）。
  *
- * @doc https://umijs.org/docs/guides/proxy
+ * 浏览器里只访问两个前缀，和旧的 jeecgboot-vue3 保持一致：
+ *   /jeecgboot    -> JeecgBoot 后端（登录、用户身份）
+ *   /kids-ai-core -> kids-ai-core（业务接口）
+ * 同源访问，Core 不需要配置 CORS。
  */
 export default {
-  // 如果需要自定义本地开发服务器  请取消注释按需调整
-  // dev: {
-  //   // localhost:8000/api/** -> https://preview.pro.ant.design/api/**
-  //   '/api/': {
-  //     // 要代理的地址
-  //     target: 'https://preview.pro.ant.design',
-  //     // 配置了这个可以从 http 代理到 https
-  //     // 依赖 origin 的功能可能需要这个，比如 cookie
-  //     changeOrigin: true,
-  //   },
-  // },
-  /**
-   * @name 详细的代理配置
-   * @doc https://github.com/chimurai/http-proxy-middleware
-   */
-  test: {
-    // localhost:8000/api/** -> https://pro-api.ant-design-demo.workers.dev/api/**
-    '/api/': {
-      target: 'https://pro-api.ant-design-demo.workers.dev',
+  dev: {
+    '/jeecgboot/': {
+      target: 'http://localhost:8080',
       changeOrigin: true,
+      pathRewrite: { '^/jeecgboot': '/jeecg-boot' },
     },
-  },
-  pre: {
-    '/api/': {
-      target: 'your pre url',
+    '/kids-ai-core/': {
+      target: 'http://127.0.0.1:8081',
       changeOrigin: true,
+      pathRewrite: { '^/kids-ai-core': '' },
     },
   },
 };
